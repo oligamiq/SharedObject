@@ -1,0 +1,31 @@
+{
+	"name": "shared-object",
+	"private": true,
+	"version": "0.1.0",
+	"description": "Shared object like SharedArrayBuffer on the web",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"fmt": "biome format --write .",
+		"lint": "biome lint",
+		"check": "biome check && tsc --noEmit",
+		"watch": "swc ./lib -d dist -s -w --strip-leading-paths",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.1",
+		"@swc/cli": "^0.4.1-nightly.20240914",
+		"@swc/core": "^1.7.26",
+		"chokidar": "^4.0.0",
+		"typescript": "^5.6.2",
+		"unplugin-swc": "^1.5.1",
+		"vite": "^5.4.1",
+		"vite-plugin-dts": "^4.2.1"
+	},
+	"dependencies": {
+		"shared-object": "file:"
+	}
+}

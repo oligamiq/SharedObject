@@ -3,5 +3,5 @@ type A = {
 };
 
 export const a: A = {
-  a: "helo",
+  a: "helbhho",
 };

@@ -6,16 +6,16 @@ import dts from "vite-plugin-dts";
 import swc from "unplugin-swc";
 
 export default defineConfig({
-  build: {
-    lib: {
-      // 複数のエントリーポイントのディクショナリや配列にもできます
-      entry: resolve(__dirname, "lib/index.ts"),
-      name: "SharedObject",
-      fileName: (_) => "index.js",
-    },
-    sourcemap: false,
-    minify: true,
-    copyPublicDir: false,
-  },
-  plugins: [swc.vite(), swc.rollup(), dts({ rollupTypes: true })],
+	build: {
+		lib: {
+			// 複数のエントリーポイントのディクショナリや配列にもできます
+			entry: resolve(__dirname, "lib/index.ts"),
+			name: "SharedObject",
+			fileName: (_) => "index.js",
+		},
+		sourcemap: false,
+		minify: true,
+		copyPublicDir: false,
+	},
+	plugins: [swc.vite(), swc.rollup(), dts({ rollupTypes: true })],
 });

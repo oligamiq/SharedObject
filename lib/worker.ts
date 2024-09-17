@@ -1,3 +1,6 @@
 /// <reference types="@better-typescript-lib/webworker" />
 
-postMessage("Hello from worker!");
+const workerThis: DedicatedWorkerGlobalScope = globalThis as unknown as DedicatedWorkerGlobalScope;
+
+workerThis.onmessage = (event) => {
+}

@@ -12,7 +12,7 @@
     "fmt": "biome format --write .",
     "lint": "biome lint",
     "check": "biome check && tsc --noEmit",
-    "watch": "swc ./lib -d dist -s -w --strip-leading-paths",
+    "watch": "swc ./src -d src-dist -s -w --strip-leading-paths",
     "preview": "vite preview"
   },
   "devDependencies": {

@@ -2,13 +2,13 @@
 
 import type { Msg } from "./mod";
 
-export class SharedObject<T> {
-  kept_object: T;
+export class SharedObject {
+  kept_object: unknown;
   room_id: string;
   id: string;
   bc: globalThis.BroadcastChannel;
 
-  constructor(object: T, id: string) {
+  constructor(object: unknown, id: string) {
     this.kept_object = object;
     this.room_id = `shared-object-${id}`;
     this.id = "parent";
@@ -61,6 +61,19 @@ export class SharedObject<T> {
       id: string,
     };
     try {
+      if (names.length === 1 && names[0] === ".self") {
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        const ret = (this.kept_object as any)(...args);
+        bc.postMessage({
+          msg: "func_call::return",
+          ret,
+          id,
+          from: this.id
+        });
+
+        return;
+      }
+
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       let obj: any = this.kept_object;
       for (const name of names) {

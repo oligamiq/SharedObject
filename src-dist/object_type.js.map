@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/object_type.ts"],"sourcesContent":["export class ObjectType {\n  \n}\n"],"names":["ObjectType"],"mappings":"AAAA,OAAO,MAAMA,WAEb"}

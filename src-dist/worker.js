@@ -1,2 +1,2 @@
-const workerThis=globalThis;console.log("Hello World from Worker!");const request=new XMLHttpRequest;request.open("GET","https://ppng.io/abvd",false);request.send(null);console.log(request.responseText);
+import{SharedObjectRef}from"../lib/ref";const workerThis=globalThis;console.log("Hello World from Worker!");const sharedObjectRef=new SharedObjectRef("test");
 //# sourceMappingURL=worker.js.map

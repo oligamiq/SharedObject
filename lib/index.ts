@@ -37,6 +37,10 @@ export class SharedObject {
         return;
       }
 
+      if (data.to !== this.id) {
+        return;
+      }
+
       if (data.msg === "func_call::call") {
         this.func_call(data);
       }
@@ -68,7 +72,8 @@ export class SharedObject {
           msg: "func_call::return",
           ret,
           id,
-          from: this.id
+          from: this.id,
+          to: data.from,
         });
 
         return;
@@ -86,14 +91,16 @@ export class SharedObject {
         msg: "func_call::return",
         ret,
         id,
-        from: this.id
+        from: this.id,
+        to: data.from,
       });
     } catch (e) {
       bc.postMessage({
         msg: "func_call::error",
         error: e,
         id,
-        from: this.id
+        from: this.id,
+        to: data.from,
       });
     }
   }
@@ -117,6 +124,7 @@ export class SharedObject {
         ret: obj,
         id,
         from: this.id,
+        to: data.from,
         can_post: true
       });
     } catch (e) {
@@ -126,6 +134,7 @@ export class SharedObject {
           error: e,
           id,
           from: this.id,
+          to: data.from,
           can_post: false
         });
 
@@ -137,6 +146,7 @@ export class SharedObject {
         error: e,
         id,
         from: this.id,
+        to: data.from,
         can_post: false
       });
     }

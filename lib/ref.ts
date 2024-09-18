@@ -5,6 +5,7 @@ export class SharedObjectRef {
   private id: string;
   private map: Map<string, (value?: unknown) => void> = new Map();
   private bc: BroadcastChannel;
+  private callbacks: Array<(...args: unknown[]) => unknown> = [];
 
   constructor(id: string) {
     this.room_id = `shared-object-${id}`;
@@ -25,11 +26,22 @@ export class SharedObjectRef {
 
         return this.get([prop as string]);
       },
-      apply: (_, thisArg, args) => {
-        console.log("apply:", thisArg, args);
+      apply: (_, __, args) => {
+        // console.log("apply:", thisArg, args);
         return this.call([".self"], args);
       }
     }) as T;
+  }
+
+  addCallback(callback: (...args: unknown[]) => void) {
+    this.callbacks.push(callback);
+  }
+
+  removeCallback(callback: (...args: unknown[]) => void) {
+    const index = this.callbacks.indexOf(callback);
+    if (index !== -1) {
+      this.callbacks.splice(index, 1);
+    }
   }
 
   private register() {
@@ -43,6 +55,9 @@ export class SharedObjectRef {
       }
 
       if (this.is_my_msg(data)) {
+        return;
+      }
+      if (data.to !== this.id) {
         return;
       }
 
@@ -84,19 +99,18 @@ export class SharedObjectRef {
   }
 
   get(names: Array<string>): Promise<unknown> {
-    const bc = this.bc;
-
     const { promise, resolve } = Promise.withResolvers();
 
     const id = this.get_id();
 
     this.map.set(id, resolve);
 
-    bc.postMessage({
+    this.postMessage({
       msg: "get::get",
       names,
       id,
-      from: this.id
+      from: this.id,
+      to: "parent"
     });
 
     let is_await = false;
@@ -170,20 +184,17 @@ export class SharedObjectRef {
     args: unknown[]
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   ): Promise<any> {
-    const bc = this.bc;
-
     const { promise, resolve } = Promise.withResolvers();
 
     const id = this.get_id();
 
     this.map.set(id, resolve);
 
-    bc.postMessage({
+    this.postMessage({
       msg: "func_call::call",
       names,
       args,
       id,
-      from: this.id
     });
 
     const data = await promise as Msg;
@@ -199,5 +210,66 @@ export class SharedObjectRef {
     }
 
     throw new Error("what happened? unreachable code");
+  }
+
+  async call_callback(
+    msg: Msg
+  ) {
+    const { name, args, id } = msg as unknown as {
+      name: string,
+      args: unknown[],
+      id: string
+    };
+
+    try {
+      if (msg.msg === "callback::call") {
+        const obj = this.callbacks.find((obj) => obj.name === name);
+
+        if (obj === undefined) {
+          throw new Error("function not found");
+        }
+
+        const ret = obj(...args);
+
+        if (ret instanceof Promise) {
+          this.postMessage({
+            msg: "callback::promise",
+            id,
+          });
+
+          const ret_ = await ret;
+
+          this.postMessage({
+            msg: "callback::promise_return",
+            ret: ret_,
+            id,
+          });
+        } else {
+          this.postMessage({
+            msg: "callback::return",
+            ret,
+            id,
+          });
+        }
+      }
+    } catch (e) {
+      this.postMessage({
+        msg: "callback::error",
+        error: e,
+        id,
+      });
+    }
+  }
+
+  private postMessage(data: {
+    msg: string,
+    id: string,
+    [key: string]: unknown
+  }) {
+    this.bc.postMessage({
+      ...data,
+      from: this.id,
+      to: "parent",
+    });
   }
 }

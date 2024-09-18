@@ -1,2 +1,2 @@
-import{SharedObjectRef}from"../lib/ref";const workerThis=globalThis;console.log("Hello World from Worker!");const sharedObjectRef=new SharedObjectRef("test");const proxy=sharedObjectRef.proxy();const ret2=await proxy[0].add(1,2);console.log(ret2);const ret3=await proxy[0];console.log(await ret3.add(1,2));
+import{SharedObjectRef}from"../lib/ref";const workerThis=globalThis;console.log("Hello World from Worker!");const sharedObjectRef=new SharedObjectRef("abcd");const proxy=sharedObjectRef.proxy();const ret2=await proxy[0].add(1,2);console.log(ret2);const sharedObjectRef2=new SharedObjectRef("tyu");const proxy2=sharedObjectRef2.proxy();console.log(await proxy2(6,9));
 //# sourceMappingURL=worker.js.map

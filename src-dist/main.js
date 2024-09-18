@@ -1,2 +1,2 @@
-import{SharedObject}from"../lib";const object=[{add(a,b){return a+b}}];const sharedObject=new SharedObject(object,"test");const w=new Worker(new URL("../src-dist/worker.js",import.meta.url).href,{type:"module"});
+import{SharedObject}from"../lib";const object=[{add(a,b){return a+b}}];const sharedObject=new SharedObject(object,"abcd");const sharedObject2=new SharedObject((a,b)=>a*b,"tyu");const w=new Worker(new URL("../src-dist/worker.js",import.meta.url).href,{type:"module"});
 //# sourceMappingURL=main.js.map

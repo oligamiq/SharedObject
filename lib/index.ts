@@ -6,12 +6,14 @@ export class SharedObject<T> {
   kept_object: T;
   room_id: string;
   id: string;
+  bc: globalThis.BroadcastChannel;
 
   constructor(object: T, id: string) {
     this.kept_object = object;
     this.room_id = `shared-object-${id}`;
     this.id = "parent";
 
+    this.bc = new globalThis.BroadcastChannel(this.room_id);
     this.register();
   }
 
@@ -23,7 +25,7 @@ export class SharedObject<T> {
   }
 
   private register() {
-    const bc = new globalThis.BroadcastChannel(this.room_id);
+    const bc = this.bc;
 
     bc.onmessage = (event) => {
       const data = event.data as Msg;
@@ -36,7 +38,11 @@ export class SharedObject<T> {
       }
 
       if (data.msg === "func_call::call") {
-        this.func_call(bc, data);
+        this.func_call(data);
+      }
+
+      if (data.msg === "get::get") {
+        this.get(data);
       }
     };
   }
@@ -45,18 +51,23 @@ export class SharedObject<T> {
     return msg.from === this.id;
   }
 
-  private func_call(bc: globalThis.BroadcastChannel, data: Msg) {
-    const { name, args, id } = data as unknown as {
-      name: string,
+  private func_call(data: Msg) {
+    const bc = this.bc;
+
+    const { names, args, id } = data as unknown as {
+      names: Array<string>,
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       args: any[],
       id: string,
     };
     try {
-      const ret = (this.kept_object as {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        [key: string]: (...args: any[]) => any;
-      })[name](...args);
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      let obj: any = this.kept_object;
+      for (const name of names) {
+        obj = obj[name];
+      }
+
+      const ret = obj(...args);
 
       bc.postMessage({
         msg: "func_call::return",
@@ -73,5 +84,48 @@ export class SharedObject<T> {
       });
     }
   }
-}
 
+  private get(data: Msg) {
+    const bc = this.bc;
+
+    const { names, id } = data as unknown as {
+      names: Array<string>,
+      id: string,
+    };
+    try {
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      let obj: any = this.kept_object;
+      for (const name of names) {
+        obj = obj[name];
+      }
+
+      bc.postMessage({
+        msg: "get::return",
+        ret: obj,
+        id,
+        from: this.id,
+        can_post: true
+      });
+    } catch (e) {
+      if ((e as { name: string }).name === "DataCloneError") {
+        bc.postMessage({
+          msg: "get::data_clone_error",
+          error: e,
+          id,
+          from: this.id,
+          can_post: false
+        });
+
+        return;
+      }
+
+      bc.postMessage({
+        msg: "get::error",
+        error: e,
+        id,
+        from: this.id,
+        can_post: false
+      });
+    }
+  }
+}

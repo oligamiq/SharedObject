@@ -56,7 +56,7 @@ export class SharedObjectRef {
         }
       }
 
-      if (data.msg.startsWith("sync::")) {
+      if (data.msg.startsWith("get::")) {
         const resolve = this.map.get(data.id);
         if (resolve !== undefined) {
           resolve(data);
@@ -99,12 +99,18 @@ export class SharedObjectRef {
       from: this.id
     });
 
+    let is_await = false;
+
     const hook = async () => {
       const data = await promise as Msg;
 
       this.check_msg_error(data);
 
-      if (data.msg === "get::return") {
+      if (data.msg === "get::return" || data.msg === "get::data_clone_error") {
+        if (is_await) {
+          console.warn("Warning!\nObjects that cannot be transferred are being retrieved.");
+        }
+
         const ret = data as unknown as {
           msg: string,
           // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -117,6 +123,11 @@ export class SharedObjectRef {
         }
         return new Proxy(() => { }, {
           get: (_, prop) => {
+            if (prop === "then") {
+              is_await = true;
+              // 即座に終わるPromiseを生成して返す
+              return Promise.resolve(target);
+            }
             console.log("inner: props:", prop);
 
             return this.get([...names, prop as string]);
@@ -137,6 +148,7 @@ export class SharedObjectRef {
     const proxy = new Proxy(() => { }, {
       get: (_, prop) => {
         if (prop === "then") {
+          is_await = true;
           return target.then.bind(target);
         }
         console.log("props:", prop);
@@ -155,8 +167,7 @@ export class SharedObjectRef {
 
   async call(
     names: Array<string>,
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    args: any[]
+    args: unknown[]
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   ): Promise<any> {
     const bc = this.bc;

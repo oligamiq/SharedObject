@@ -6,15 +6,17 @@ const workerThis: DedicatedWorkerGlobalScope = globalThis as unknown as Dedicate
 
 console.log("Hello World from Worker!");
 
-// 同期xhr
 const sharedObjectRef = new SharedObjectRef("test");
 
-// const ret = await sharedObjectRef.call("add", [1, 2]);
+const proxy = sharedObjectRef.proxy<[{ add(a: number, b: number): Promise<number> }]>();
 
-// console.log(ret);
+console.log(proxy);
 
-// const proxy = sharedObjectRef.proxy<[{ add(a: number, b: number): Promise<number> }]>();
+console.log(proxy[0].add);
 
-// const ret2 = await proxy[0].add(1, 2);
+console.log(proxy);
+
+const ret2 = await proxy[0].add(1, 2);
+
 
 // console.log(ret2);

@@ -4,7 +4,6 @@ export class SharedObjectRef {
   private room_id: string
   private id: string;
   private map: Map<string, (value?: unknown) => void> = new Map();
-  private sync_handle: Promise<void>;
   private bc: BroadcastChannel;
 
   constructor(id: string) {
@@ -13,20 +12,22 @@ export class SharedObjectRef {
     this.id = id;
     this.bc = new globalThis.BroadcastChannel(this.room_id);
     this.register();
-
-    this.sync_handle = this.sync();
   }
 
   private is_my_msg(msg: Msg) {
     return msg.from === this.id;
   }
 
-  async_proxy<T>() {
-    return new Proxy({}, {
+  proxy<T>() {
+    return new Proxy(() => { }, {
       get: (_, prop) => {
         console.log("props:", prop);
 
-        const handle = async 
+        return this.get([prop as string]);
+      },
+      apply: (target, thisArg, args) => {
+        console.log("apply:", thisArg, args);
+        return this.call([".self"], args);
       }
     }) as T;
   }
@@ -71,33 +72,6 @@ export class SharedObjectRef {
     return Math.random().toString(36).slice(2);
   }
 
-  async sync(): Promise<void> {
-    if (this.sync_handle !== undefined) {
-      return this.sync_handle;
-    }
-
-    const bc = this.bc;
-
-    const { promise, resolve } = Promise.withResolvers();
-
-    const id = this.get_id();
-
-    bc.postMessage({
-      msg: "sync::call",
-      id,
-      from: this.id
-    });
-
-    this.map.set(id, resolve);
-
-    const data = await promise as Msg;
-
-    this.check_msg_error(data);
-
-    if (data.msg === "sync::return") {
-    }
-  }
-
   private check_msg_error(data: {
     msg: string,
   }) {
@@ -109,12 +83,83 @@ export class SharedObjectRef {
     }
   }
 
+  get(names: Array<string>): Promise<unknown> {
+    const bc = this.bc;
+
+    const { promise, resolve } = Promise.withResolvers();
+
+    const id = this.get_id();
+
+    this.map.set(id, resolve);
+
+    bc.postMessage({
+      msg: "get::get",
+      names,
+      id,
+      from: this.id
+    });
+
+    const hook = async () => {
+      const data = await promise as Msg;
+
+      this.check_msg_error(data);
+
+      if (data.msg === "get::return") {
+        const ret = data as unknown as {
+          msg: string,
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          ret: any,
+          can_post: boolean
+        };
+
+        if (ret.can_post) {
+          return ret.ret;
+        }
+        return new Proxy(() => { }, {
+          get: (_, prop) => {
+            console.log("inner: props:", prop);
+
+            return this.get([...names, prop as string]);
+          },
+          apply: (_, __, args) => {
+            console.log("inner: apply:", args);
+
+            return this.call(names, args);
+          }
+        });
+      }
+
+      throw new Error("what happened? unreachable code");
+    }
+
+    const target = hook();
+
+    const proxy = new Proxy(() => { }, {
+      get: (_, prop) => {
+        if (prop === "then") {
+          return target.then.bind(target);
+        }
+        console.log("props:", prop);
+
+        return this.get([...names, prop as string]);
+      },
+      apply: (_, __, args) => {
+        console.log("apply:", args);
+
+        return this.call(names, args);
+      }
+    });
+
+    return proxy as unknown as Promise<unknown>;
+  }
+
   async call(
-    name: string,
+    names: Array<string>,
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     args: any[]
-  ) {
-    const bc = new globalThis.BroadcastChannel(this.room_id);
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  ): Promise<any> {
+    const bc = this.bc;
 
     const { promise, resolve } = Promise.withResolvers();
 
@@ -124,19 +169,18 @@ export class SharedObjectRef {
 
     bc.postMessage({
       msg: "func_call::call",
-      name,
+      names,
       args,
-      id
+      id,
+      from: this.id
     });
 
-    const data = await promise as {
-      msg: string,
-    }
+    const data = await promise as Msg;
 
     this.check_msg_error(data);
 
     if (data.msg === "func_call::return") {
-      return (data as {
+      return (data as unknown as {
         msg: string,
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         ret: any

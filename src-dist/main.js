@@ -1,2 +1,2 @@
-import{SharedObject}from"../lib";const object=[{add(a,b){return a+b}}];const sharedObject=new SharedObject(object,"test");const w=new Worker(new URL("../src-dist/worker.js",import.meta.url).href,{type:"module"});const as=(async()=>{await new Promise(resolve=>setTimeout(resolve,1e3));console.log("Hello World from Main!")})();const pro=new Proxy(as,{get:(_,prop)=>{console.log("props:",prop)}});console.log("pro[0]:",pro[0]);await as;
+import{SharedObject}from"../lib";const object=[{add(a,b){return a+b}}];const sharedObject=new SharedObject(object,"test");const w=new Worker(new URL("../src-dist/worker.js",import.meta.url).href,{type:"module"});
 //# sourceMappingURL=main.js.map

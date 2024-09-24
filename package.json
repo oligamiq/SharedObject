@@ -1,6 +1,6 @@
 {
   "name": "shared-object",
-  "private": true,
+  "private": false,
   "version": "0.1.0",
   "description": "Shared object like SharedArrayBuffer on the web",
   "type": "module",

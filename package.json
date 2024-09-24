@@ -1,11 +1,28 @@
 {
-  "name": "shared-object",
+  "name": "@oligami/shared-object",
   "private": false,
   "version": "0.1.0",
+  "author": "oligami <nziq53@gmail.com> (https://github.com/oligamiq)",
+  "license": "MIT",
   "description": "Shared object like SharedArrayBuffer on the web",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oligamiq/SharedObject"
+  },
+  "keywords": ["shared", "object", "worker", "web"],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "browser": {
+        "import": "./dist/index.js"
+      }
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && tsc --noEmit",

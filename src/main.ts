@@ -1,5 +1,5 @@
 import { SharedObject } from "../lib";
-import { SharedObjectRef } from '../lib/ref';
+import { SharedObjectRef } from '../lib';
 
 // navigator.serviceWorker.controller?.postMessage("Hello from main.ts");
 

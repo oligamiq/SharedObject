@@ -1,6 +1,6 @@
 /// <reference types="@better-typescript-lib/webworker" />
 
-import { SharedObjectRef } from "../lib/ref";
+import { SharedObjectRef } from "../lib";
 
 const workerThis: DedicatedWorkerGlobalScope = globalThis as unknown as DedicatedWorkerGlobalScope;
 

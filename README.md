@@ -6,7 +6,7 @@ Currently, when async or await is called, it does not wait.
 
 example:
 
-```javascript:main.ts
+```typescript:main.ts
 import { SharedObject } from "../lib";
 import { SharedObjectRef } from '../lib/ref';
 
@@ -23,7 +23,7 @@ const sharedObject2 = new SharedObject((a, b) => a * b, "tyu");
 const w = new Worker(new URL("../src-dist/worker.js", import.meta.url).href, { type: "module" });
 ```
 
-```javascript:worker.ts
+```typescript:worker.ts
 import { SharedObjectRef } from "../lib/ref";
 
 const sharedObjectRef = new SharedObjectRef("abcd");

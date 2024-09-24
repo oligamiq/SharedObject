@@ -2,6 +2,9 @@
   "name": "@oligami/shared-object",
   "private": false,
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "oligami <nziq53@gmail.com> (https://github.com/oligamiq)",
   "license": "MIT",
   "description": "Shared object like SharedArrayBuffer on the web",

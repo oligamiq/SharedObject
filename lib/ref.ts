@@ -10,7 +10,7 @@ export class SharedObjectRef {
   constructor(id: string) {
     this.room_id = `shared-object-${id}`;
 
-    this.id = id;
+    this.id = this.get_id();
     this.bc = new globalThis.BroadcastChannel(this.room_id);
     this.register();
   }

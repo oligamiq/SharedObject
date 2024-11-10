@@ -40,3 +40,5 @@ const proxy2 = sharedObjectRef2.proxy<(a: number, b: number) => number>();
 
 console.log(await proxy2(6, 9));
 ```
+> !warning
+> "These can also be shared between tabs. Please be aware."
